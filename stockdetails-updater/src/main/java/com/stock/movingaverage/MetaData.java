@@ -54,7 +54,7 @@ public class MetaData
 	private String interval;
 	
 	@JsonProperty("5: Time Period")
-	private String timePeriod;
+	private int timePeriod;
 	
 	/**
 	 * @return the symbol
@@ -91,7 +91,7 @@ public class MetaData
 	/**
 	 * @return the timePeriod
 	 */
-	public String getTimePeriod()
+	public int getTimePeriod()
 	{
 		return timePeriod;
 	}
@@ -99,7 +99,7 @@ public class MetaData
 	/**
 	 * @param timePeriod the timePeriod to set
 	 */
-	public void setTimePeriod(String timePeriod)
+	public void setTimePeriod(int timePeriod)
 	{
 		this.timePeriod = timePeriod;
 	}

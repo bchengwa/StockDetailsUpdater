@@ -34,7 +34,7 @@ public class MovingAverageDAO
 	
 	@Id
 	@Column(name = "timeperiod")
-	private String timePeriod;
+	private int timePeriod;
 	
 	@Id
 	@Column(name = "averagetype")
@@ -89,7 +89,7 @@ public class MovingAverageDAO
 	/**
 	 * @return the timePeriod
 	 */
-	public String getTimePeriod()
+	public int getTimePeriod()
 	{
 		return timePeriod;
 	}
@@ -97,7 +97,7 @@ public class MovingAverageDAO
 	/**
 	 * @param timePeriod the timePeriod to set
 	 */
-	public void setTimePeriod(String timePeriod)
+	public void setTimePeriod(int timePeriod)
 	{
 		this.timePeriod = timePeriod;
 	}

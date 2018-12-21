@@ -17,7 +17,7 @@ public class MovingAverageId implements Serializable
 	
 	private String symbol;
 	private String interval;
-	private String timePeriod;
+	private int timePeriod;
 	private String averageType;
 	private Date movingAverageDate;
 	/* (non-Javadoc)
@@ -32,7 +32,7 @@ public class MovingAverageId implements Serializable
 		result = prime * result + ((interval == null) ? 0 : interval.hashCode());
 		result = prime * result + ((movingAverageDate == null) ? 0 : movingAverageDate.hashCode());
 		result = prime * result + ((symbol == null) ? 0 : symbol.hashCode());
-		result = prime * result + ((timePeriod == null) ? 0 : timePeriod.hashCode());
+		result = prime * result + timePeriod;
 		return result;
 	}
 	/* (non-Javadoc)
@@ -72,11 +72,7 @@ public class MovingAverageId implements Serializable
 				return false;
 		} else if (!symbol.equals(other.symbol))
 			return false;
-		if (timePeriod == null)
-		{
-			if (other.timePeriod != null)
-				return false;
-		} else if (!timePeriod.equals(other.timePeriod))
+		if (timePeriod != other.timePeriod)
 			return false;
 		return true;
 	}
