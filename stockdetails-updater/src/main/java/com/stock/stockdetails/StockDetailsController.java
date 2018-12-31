@@ -106,11 +106,9 @@ public class StockDetailsController
 				}
 				
 				/*Get MACD data from Alpha Vantage*/
-				stockDetailsService.setSymbol(stock.getSymbol());
 				stockDetailsService.setFunction("MACD");
 				stockDetailsService.setInterval("daily");
 				stockDetailsService.setSeriesType("close");
-				stockDetailsService.setApiKey(alphaAPIKey);
 
 				MACD_DAO [] macdData = stockDetailsService.getMACD_Data();
 				for (int i = 0; i < macdData.length; i++)

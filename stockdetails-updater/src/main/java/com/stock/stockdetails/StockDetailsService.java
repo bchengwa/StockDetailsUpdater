@@ -137,7 +137,6 @@ public class StockDetailsService
 				movingAverageDAO[i].setValue(entry.getValue().getMovingAverageValue());
 				movingAverageDAO[i].setLastUpdateDate(MiscFunctions.getCurrentDateTime());
 				
-				
 				logger.debug("Symbol : " + movingAverageDAO[i].getSymbol());
 				logger.debug("MA Type : " + movingAverageDAO[i].getAverageType());
 				logger.debug("Interval : " + movingAverageDAO[i].getInterval());
@@ -145,7 +144,6 @@ public class StockDetailsService
 				logger.debug("MA Date : " + movingAverageDAO[i].getMovingAverageDate());
 				logger.debug("MA Value : " + movingAverageDAO[i].getValue());
 				logger.debug("LastUpdateDate : " + movingAverageDAO[i].getLastUpdateDate().toString());
-				
 				
 				i++;
 				if (i >= maxDateSize)

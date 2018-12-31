@@ -25,15 +25,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MACD_Data
 {
-	@JsonProperty("MACD_Hist")
-	private double macdHistogram;
-	
 	@JsonProperty("MACD_Signal")
 	private double macdSignal;
 	
 	@JsonProperty("MACD")
 	private double macdValue;
 
+	@JsonProperty("MACD_Hist")
+	private double macdHistogram;
+	
 	/**
 	 * @return the macdHist
 	 */
