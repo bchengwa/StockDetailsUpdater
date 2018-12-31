@@ -33,7 +33,7 @@ public class MovingAverageDAO
 	private String interval;
 	
 	@Id
-	@Column(name = "timeperiod")
+	@Column(name = "movingaverageperiod")
 	private int timePeriod;
 	
 	@Id

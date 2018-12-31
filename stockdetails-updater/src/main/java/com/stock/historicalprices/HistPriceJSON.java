@@ -1,7 +1,3 @@
-package com.stock.historicalprices;
-
-import java.util.LinkedHashMap;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /*
  * This class maps daily prices for a stock. For now, only the closing price will be used
@@ -39,6 +35,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
         }
         }
  */
+
+package com.stock.historicalprices;
+
+import java.util.LinkedHashMap;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class HistPriceJSON
 {

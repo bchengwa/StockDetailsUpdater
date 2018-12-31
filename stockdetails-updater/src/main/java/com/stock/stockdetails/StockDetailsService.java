@@ -24,6 +24,10 @@ import com.stock.historicalprices.HistPriceDAO;
 import com.stock.historicalprices.HistPriceData;
 import com.stock.historicalprices.HistPriceJSON;
 import com.stock.historicalprices.HistPriceRepositoryInterface;
+import com.stock.macd.MACDRepositoryInterface;
+import com.stock.macd.MACD_DAO;
+import com.stock.macd.MACD_Data;
+import com.stock.macd.MACD_JSON;
 import com.stock.miscfunctions.*;
 import com.stock.movingaverage.*;
 
@@ -38,13 +42,17 @@ public class StockDetailsService
 	private MovingAverageRepositoryInterface movingAverageRepository;
 	@Autowired
 	private HistPriceRepositoryInterface histPriceRepository;
+	@Autowired
+	private MACDRepositoryInterface macdRepository;
 	
 	private final int maxDateSize = 10;
+	private final int maxMACDSize = 5;
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	private final RestTemplate restCaller;
 	private String symbol;
 	private String function;
 	private String interval;
+	private String seriesType;
 	private int period;
 	private String apiKey;
 	
@@ -128,6 +136,7 @@ public class StockDetailsService
 				movingAverageDAO[i].setValue(entry.getValue().getMovingAverageValue());
 				movingAverageDAO[i].setLastUpdateDate(MiscFunctions.getCurrentDateTime());
 				
+				/*
 				logger.info("Symbol : " + movingAverageDAO[i].getSymbol());
 				logger.info("MA Type : " + movingAverageDAO[i].getAverageType());
 				logger.info("Interval : " + movingAverageDAO[i].getInterval());
@@ -135,7 +144,8 @@ public class StockDetailsService
 				logger.info("MA Date : " + movingAverageDAO[i].getMovingAverageDate());
 				logger.info("MA Value : " + movingAverageDAO[i].getValue());
 				logger.info("LastUpdateDate : " + movingAverageDAO[i].getLastUpdateDate().toString());
-			
+				*/
+				
 				i++;
 				if (i >= maxDateSize)
 					break;
@@ -196,14 +206,16 @@ public class StockDetailsService
 			{
 				histPriceDAO[i] = new HistPriceDAO();
 				histPriceDAO[i].setSymbol(this.getSymbol());
-				histPriceDAO[i].setClosingDate(MiscFunctions.getDateFromString(entry.getKey()));
-				histPriceDAO[i].setClosingPrice(entry.getValue().getClosingPrice());
+				histPriceDAO[i].setClosingDate(MiscFunctions.getDateFromString(entry.getKey()));	//Closing date is the key
+				histPriceDAO[i].setClosingPrice(entry.getValue().getClosingPrice());				//Closing price is the value
 				histPriceDAO[i].setLastupdatedate(MiscFunctions.getCurrentDateTime());
 				
+				/*
 				logger.info("Symbol : " + histPriceDAO[i].getSymbol());
 				logger.info("Closing Date : " + histPriceDAO[i].getClosingDate().toString());
 				logger.info("Closing Price : " + histPriceDAO[i].getClosingPrice());
 				logger.info("LastUpdateDate : " + histPriceDAO[i].getLastupdatedate().toString());
+				*/
 				
 				i++;
 				if (i >= maxDateSize)
@@ -218,6 +230,78 @@ public class StockDetailsService
 		return histPriceDAO;
 	}
 
+	/*
+	 * Get the MACD information. LinkedHashMap is used to get key/value information for 
+	 * dates and MACD data. See sample below
+	 * 
+	 * "Technical Analysis: MACD": {
+        "2018-12-28": {
+            "MACD_Hist": "-0.7848",
+            "MACD": "-2.2688",
+            "MACD_Signal": "-1.4840"
+        },
+        "2018-12-27": {
+            "MACD_Hist": "-1.1379",
+            "MACD": "-2.4257",
+            "MACD_Signal": "-1.2878"
+        },
+        "2018-12-26": {
+            "MACD_Hist": "-1.3033",
+            "MACD": "-2.3066",
+            "MACD_Signal": "-1.0033"
+        },
+        "2018-12-24": {
+            "MACD_Hist": "-1.0200",
+            "MACD": "-1.6974",
+            "MACD_Signal": "-0.6775"
+        },
+	 */
+	
+	public MACD_DAO [] getMACD_Data()
+	{
+		MACD_DAO [] macdDAO = new MACD_DAO[maxMACDSize];
+		String macdURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
+				"&interval=" + this.getInterval() + "&series_type=" + this.getSeriesType() + "&apikey=" + this.apiKey;
+		
+		logger.info(">>>>>> StockDetailsService::getMACD_Data - Calling Alpha Vantage for MACD details ...");
+		MACD_JSON macdJSON = restCaller.getForObject(macdURI, MACD_JSON.class);
+		LinkedHashMap<String, MACD_Data> macdDate = macdJSON.getMacdDate();
+		
+		try
+		{
+			int i = 0;
+			for (Map.Entry<String, MACD_Data> entry : macdDate.entrySet())
+			{
+				macdDAO[i] = new MACD_DAO();
+				macdDAO[i].setSymbol(this.getSymbol());
+				macdDAO[i].setMacdDate(MiscFunctions.getDateFromString(entry.getKey()));	//MACD date is the key
+				macdDAO[i].setMacdHistogram(entry.getValue().getMacdHistogram());			//MACD_Data.Histogram is a value
+				macdDAO[i].setMacdSignal(entry.getValue().getMacdSignal());					//MACD_Data.Signal is a value
+				macdDAO[i].setMacdValue(entry.getValue().getMacdValue());					//MACD_Data.Macd is a value
+				macdDAO[i].setLastupdatedate(MiscFunctions.getCurrentDateTime());
+				
+				/*
+				logger.info("Symbol : " + macdDAO[i].getSymbol());
+				logger.info("MACD Date : " + macdDAO[i].getMacdDate().toString());
+				logger.info("MACD Histogram : " + macdDAO[i].getMacdHistogram());
+				logger.info("MACD Signal : " + macdDAO[i].getMacdSignal());
+				logger.info("MACD Value : " + macdDAO[i].getMacdValue());
+				logger.info("LastUpdateDate : " + macdDAO[i].getLastupdatedate().toString());
+				*/
+				
+				i++;
+				if (i >= maxMACDSize)
+					break;
+			}
+		}
+		catch(Exception e)
+		{
+			logger.info(">>>>>> StockDetailsService::getMACD_Data - An error occurred retrieving MACD data from JSON buffer ...");
+			e.printStackTrace();
+		}
+		return macdDAO;
+	}
+	
 	public void updateStockDetails(StockDetails stockDetails)
 	{
 		stockDetailsRepository.save(stockDetails);
@@ -233,6 +317,11 @@ public class StockDetailsService
 		histPriceRepository.save(histPriceDAO);
 	}
 
+	public void addMACD_Data(MACD_DAO macdDAO)
+	{
+		macdRepository.save(macdDAO);
+	}
+	
 	public List<Stock> getOptionableStocks(String indValue)
 	{
 		return stockRepository.findByOptionsoffered(indValue);
@@ -284,6 +373,22 @@ public class StockDetailsService
 	public void setInterval(String interval)
 	{
 		this.interval = interval;
+	}
+
+	/**
+	 * @return the series_type
+	 */
+	public String getSeriesType()
+	{
+		return seriesType;
+	}
+
+	/**
+	 * @param series_type the series_type to set
+	 */
+	public void setSeriesType(String seriesType)
+	{
+		this.seriesType = seriesType;
 	}
 
 	/**
