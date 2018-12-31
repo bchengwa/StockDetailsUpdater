@@ -36,7 +36,7 @@ public class StockDetailsController
 	@GetMapping(value =  "/stockdetails")
 	public void retrieveOptionalbleSymbols()
 	{
-		logger.info(">>>>> StockDetailsController::retrieveOptionalbleSymbols");
+		logger.info(">>> BEGIN >>> StockDetailsController::retrieveOptionalbleSymbols");
 
 		/*Get an array of stock symbols from the database. Than loop
 		 * through each and get the stock details from IEX*/
@@ -46,44 +46,40 @@ public class StockDetailsController
 			/* Get all optionable stocks from the database. Then loop through and fetch each stock */
 			for (Stock stock : stockDetailsService.getOptionableStocks("Y"))
 			{
-				/*
-				System.out.println("Symbol = " + stock.getSymbol());
-				System.out.println("name = " + stock.getName());
-				System.out.println("Type = " + stock.getType());
-				*/
+				logger.debug("Symbol = " + stock.getSymbol());
+				logger.debug("name = " + stock.getName());
 				
 				/* Retrieve stock details information from IEX */
 				StockDetails stockDetails = stockDetailsService.getIEXStockDetails(stock.getSymbol());
-				
-				/*
-				System.out.println("symbol = " + stockDetails.getSymbol());
-				System.out.println("price = " + stockDetails.getPrice());
-				System.out.println("volume = " + stockDetails.getVolume());
-				System.out.println("float = " + stockDetails.getFloatshares());
-				System.out.println("shares OS = " + stockDetails.getSharesoutstanding());
-				System.out.println("shares short = " + stockDetails.getSharesshort());
-				System.out.println("short ratio = " + stockDetails. getShortratio());
-				System.out.println("EPR MRQ = " + stockDetails. getEpsmrq());
-				System.out.println("EPS TTM = " + stockDetails. getEpsttm());
-				System.out.println("resistance = " + stockDetails.getResistance());
-				System.out.println("support = " + stockDetails.getSupport());
-				System.out.println("Inst. pct = " + stockDetails.getInstitutionpct()); 
-				System.out.println("50 DMA " + stockDetails.getMovingAvg50Day()); 
-				System.out.println("200 DMA " + stockDetails.getMovingAvg200Day()); 
-				System.out.println("5 day pct change = " + stockDetails.getPctchange5day()); 
-				System.out.println("1 mon pct change = " + stockDetails.getPctchange1month());
-				System.out.println("3 mon pct change = " + stockDetails.getPctchange3month());
-				System.out.println("6 mon pct change = " + stockDetails.getPctchange6month());
-				System.out.println("1 yr pct change = " + stockDetails.getPctchange1year());
-				System.out.println("2 yr pct change = " + stockDetails.getPctchange2year());
-				System.out.println("5 yr pct change = " + stockDetails.getPctchange5year());
-				System.out.println("ytd pct change = " + stockDetails.getYtdpctchange());
-				System.out.println("52 week low = " + stockDetails.getLow52week());
-				System.out.println("52 week high = " + stockDetails.getHigh52week());
-				System.out.println("earnings date = " + stockDetails.getEarningsdate());
-				System.out.println("lastupdatedate = " + stockDetails.getLastupdatedate());
-				*/
 				stockDetails.setLastupdatedate(MiscFunctions.getCurrentDateTime());
+				
+				logger.debug("symbol = " + stockDetails.getSymbol());
+				logger.debug("price = " + stockDetails.getPrice());
+				logger.debug("volume = " + stockDetails.getVolume());
+				logger.debug("float = " + stockDetails.getFloatshares());
+				logger.debug("shares OS = " + stockDetails.getSharesoutstanding());
+				logger.debug("shares short = " + stockDetails.getSharesshort());
+				logger.debug("short ratio = " + stockDetails. getShortratio());
+				logger.debug("EPR MRQ = " + stockDetails. getEpsmrq());
+				logger.debug("EPS TTM = " + stockDetails. getEpsttm());
+				logger.debug("resistance = " + stockDetails.getResistance());
+				logger.debug("support = " + stockDetails.getSupport());
+				logger.debug("Inst. pct = " + stockDetails.getInstitutionpct()); 
+				logger.debug("50 DMA " + stockDetails.getMovingAvg50Day()); 
+				logger.debug("200 DMA " + stockDetails.getMovingAvg200Day()); 
+				logger.debug("5 day pct change = " + stockDetails.getPctchange5day()); 
+				logger.debug("1 mon pct change = " + stockDetails.getPctchange1month());
+				logger.debug("3 mon pct change = " + stockDetails.getPctchange3month());
+				logger.debug("6 mon pct change = " + stockDetails.getPctchange6month());
+				logger.debug("1 yr pct change = " + stockDetails.getPctchange1year());
+				logger.debug("2 yr pct change = " + stockDetails.getPctchange2year());
+				logger.debug("5 yr pct change = " + stockDetails.getPctchange5year());
+				logger.debug("ytd pct change = " + stockDetails.getYtdpctchange());
+				logger.debug("52 week low = " + stockDetails.getLow52week());
+				logger.debug("52 week high = " + stockDetails.getHigh52week());
+				logger.debug("earnings date = " + stockDetails.getEarningsdate().toString());
+				logger.debug("lastupdatedate = " + stockDetails.getLastupdatedate().toString());
+				
 				stockDetailsService.updateStockDetails(stockDetails);
 				
 				stockDetailsService.setSymbol(stock.getSymbol());
@@ -126,10 +122,10 @@ public class StockDetailsController
 		}
 		catch(Exception e)
 		{
-			logger.info("<<<<< StockDetailsController::retrieveOptionalbleSymbols : An error occurred inserting a record in the database");
+			logger.info("<<< END <<< StockDetailsController::retrieveOptionalbleSymbols : An error occurred inserting a record in the database");
 			e.printStackTrace();
 		}
 		
-		logger.info("<<<<< StockDetailsController::retrieveOptionalbleSymbols");
+		logger.info("<<< END <<< StockDetailsController::retrieveOptionalbleSymbols");
 	}
 }

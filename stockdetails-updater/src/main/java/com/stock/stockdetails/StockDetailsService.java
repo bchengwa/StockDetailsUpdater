@@ -71,23 +71,23 @@ public class StockDetailsService
 	
 	public StockDetails getIEXStockDetails(String symbol)
 	{
-		logger.info(">>>>>> StockDetailsService::getIEXStockDetails ...");
+		logger.info(">>> BEGIN >>> StockDetailsService::getIEXStockDetails ...");
 		StockDetails mergedDetails = null;
 		
 		String keyStatURI = "https://api.iextrading.com/1.0/stock/" + symbol + "/stats";
 		String quoteURI = "https://api.iextrading.com/1.0/stock/" + symbol + "/quote";
 
-		logger.info(">>>>>> StockDetailsService::getIEXStockDetails - Calling IEX for key stats details");
+		logger.info(">>>>>> StockDetailsService::getIEXStockDetails - Calling IEX for key stats details for " + symbol);
 		StockDetails keyStats = restCaller.getForObject(keyStatURI, StockDetails.class);
 		
-		logger.info(">>>>>> StockDetailsService::getIEXStockDetails - Calling IEX for key quote details");
+		logger.info(">>>>>> StockDetailsService::getIEXStockDetails - Calling IEX for key quote details for " + symbol);
 		StockDetails quoteDetails = restCaller.getForObject(quoteURI, StockDetails.class);
 		
 		keyStats.setVolume(quoteDetails.getVolume());
 		keyStats.setPrice(quoteDetails.getPrice());
 		mergedDetails = keyStats;
-		
-		logger.info("<<<<<< StockDetailsService::getIEXStockDetails");
+		 
+		logger.info("<<< END <<< StockDetailsService::getIEXStockDetails");
 		return mergedDetails;
 	}
 	
@@ -107,8 +107,9 @@ public class StockDetailsService
 		String mvAvgURI = "https://www.alphavantage.co/query?function=" + this.function + "&symbol=" + this.symbol +
 							"&interval=" + interval + "&time_period=" + this.period + "&series_type=open&apikey=" + this.apiKey;
 		
-		//System.out.println("RESTCALLER REQUEST IS " + mvAvgURI);
-		logger.info(">>>>>> StockDetailsService::getMovingAverageData - Calling Alpha Vantage for moving average details");
+		logger.info(">>> BEGIN >>> StockDetailsService::getMovingAverageData - Calling Alpha Vantage for moving average details");
+		logger.info(">>>>>> StockDetailsService::getMovingAverageData - " + mvAvgURI);
+		
 		MovingAverageJSON movingAvgData = restCaller.getForObject(mvAvgURI, MovingAverageJSON.class);
 		
 		/*
@@ -136,15 +137,15 @@ public class StockDetailsService
 				movingAverageDAO[i].setValue(entry.getValue().getMovingAverageValue());
 				movingAverageDAO[i].setLastUpdateDate(MiscFunctions.getCurrentDateTime());
 				
-				/*
-				logger.info("Symbol : " + movingAverageDAO[i].getSymbol());
-				logger.info("MA Type : " + movingAverageDAO[i].getAverageType());
-				logger.info("Interval : " + movingAverageDAO[i].getInterval());
-				logger.info("Time Period : " + movingAverageDAO[i].getTimePeriod());
-				logger.info("MA Date : " + movingAverageDAO[i].getMovingAverageDate());
-				logger.info("MA Value : " + movingAverageDAO[i].getValue());
-				logger.info("LastUpdateDate : " + movingAverageDAO[i].getLastUpdateDate().toString());
-				*/
+				
+				logger.debug("Symbol : " + movingAverageDAO[i].getSymbol());
+				logger.debug("MA Type : " + movingAverageDAO[i].getAverageType());
+				logger.debug("Interval : " + movingAverageDAO[i].getInterval());
+				logger.debug("Time Period : " + movingAverageDAO[i].getTimePeriod());
+				logger.debug("MA Date : " + movingAverageDAO[i].getMovingAverageDate());
+				logger.debug("MA Value : " + movingAverageDAO[i].getValue());
+				logger.debug("LastUpdateDate : " + movingAverageDAO[i].getLastUpdateDate().toString());
+				
 				
 				i++;
 				if (i >= maxDateSize)
@@ -153,11 +154,11 @@ public class StockDetailsService
 		}
 		catch(Exception e)
 		{
-			logger.info("<<<<<< StockDetailsService::getMovingAverageData - An error occurred retrieving moving average data from JSON buffer");
+			logger.info("<<< END <<< StockDetailsService::getMovingAverageData - An error occurred retrieving moving average data from JSON buffer");
 			e.printStackTrace();
 		}
 
-		logger.info("<<<<<< StockDetailsService::getMovingAverageData");
+		logger.info("<<< END <<< StockDetailsService::getMovingAverageData");
 		return movingAverageDAO;
 	}
 	
@@ -195,7 +196,9 @@ public class StockDetailsService
 		HistPriceDAO [] histPriceDAO = new HistPriceDAO[maxDateSize];
 		String histPriceURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() + "&apikey=" + this.apiKey;
 		
-		logger.info(">>>>>> StockDetailsService::getHistoricalPrices - Calling Alpha Vantage for historical prices details ...");
+		logger.info(">>> BEGIN >>> StockDetailsService::getHistoricalPrices - Calling Alpha Vantage for historical prices details ...");
+		logger.info(">>>>>> StockDetailsService::getHistoricalPrices - " + histPriceURI);
+		
 		HistPriceJSON histPriceJSON = restCaller.getForObject(histPriceURI, HistPriceJSON.class);
 		LinkedHashMap<String, HistPriceData> histPriceDate = histPriceJSON.getHistPriceDate();
 		
@@ -210,12 +213,10 @@ public class StockDetailsService
 				histPriceDAO[i].setClosingPrice(entry.getValue().getClosingPrice());				//Closing price is the value
 				histPriceDAO[i].setLastupdatedate(MiscFunctions.getCurrentDateTime());
 				
-				/*
-				logger.info("Symbol : " + histPriceDAO[i].getSymbol());
-				logger.info("Closing Date : " + histPriceDAO[i].getClosingDate().toString());
-				logger.info("Closing Price : " + histPriceDAO[i].getClosingPrice());
-				logger.info("LastUpdateDate : " + histPriceDAO[i].getLastupdatedate().toString());
-				*/
+				logger.debug("Symbol : " + histPriceDAO[i].getSymbol());
+				logger.debug("Closing Date : " + histPriceDAO[i].getClosingDate().toString());
+				logger.debug("Closing Price : " + histPriceDAO[i].getClosingPrice());
+				logger.debug("LastUpdateDate : " + histPriceDAO[i].getLastupdatedate().toString());
 				
 				i++;
 				if (i >= maxDateSize)
@@ -224,9 +225,10 @@ public class StockDetailsService
 		}
 		catch(Exception e)
 		{
-			logger.info(">>>>>> StockDetailsService::getHistoricalPrices - An error occurred retrieving historical price data from JSON buffer ...");
+			logger.info(">>> END >>> StockDetailsService::getHistoricalPrices - An error occurred retrieving historical price data from JSON buffer ...");
 			e.printStackTrace();
 		}
+		logger.info(">>> END >>> StockDetailsService::getHistoricalPrices");
 		return histPriceDAO;
 	}
 
@@ -263,7 +265,9 @@ public class StockDetailsService
 		String macdURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
 				"&interval=" + this.getInterval() + "&series_type=" + this.getSeriesType() + "&apikey=" + this.apiKey;
 		
-		logger.info(">>>>>> StockDetailsService::getMACD_Data - Calling Alpha Vantage for MACD details ...");
+		logger.info(">>> BEGIN >>> StockDetailsService::getMACD_Data - Calling Alpha Vantage for MACD details ...");
+		logger.info(">>>>>> StockDetailsService::getMACD_Data - " + macdURI);
+		
 		MACD_JSON macdJSON = restCaller.getForObject(macdURI, MACD_JSON.class);
 		LinkedHashMap<String, MACD_Data> macdDate = macdJSON.getMacdDate();
 		
@@ -280,14 +284,12 @@ public class StockDetailsService
 				macdDAO[i].setMacdValue(entry.getValue().getMacdValue());					//MACD_Data.Macd is a value
 				macdDAO[i].setLastupdatedate(MiscFunctions.getCurrentDateTime());
 				
-				/*
-				logger.info("Symbol : " + macdDAO[i].getSymbol());
-				logger.info("MACD Date : " + macdDAO[i].getMacdDate().toString());
-				logger.info("MACD Histogram : " + macdDAO[i].getMacdHistogram());
-				logger.info("MACD Signal : " + macdDAO[i].getMacdSignal());
-				logger.info("MACD Value : " + macdDAO[i].getMacdValue());
-				logger.info("LastUpdateDate : " + macdDAO[i].getLastupdatedate().toString());
-				*/
+				logger.debug("Symbol : " + macdDAO[i].getSymbol());
+				logger.debug("MACD Date : " + macdDAO[i].getMacdDate().toString());
+				logger.debug("MACD Histogram : " + macdDAO[i].getMacdHistogram());
+				logger.debug("MACD Signal : " + macdDAO[i].getMacdSignal());
+				logger.debug("MACD Value : " + macdDAO[i].getMacdValue());
+				logger.debug("LastUpdateDate : " + macdDAO[i].getLastupdatedate().toString());
 				
 				i++;
 				if (i >= maxMACDSize)
@@ -296,9 +298,10 @@ public class StockDetailsService
 		}
 		catch(Exception e)
 		{
-			logger.info(">>>>>> StockDetailsService::getMACD_Data - An error occurred retrieving MACD data from JSON buffer ...");
+			logger.info(">>> END >>> StockDetailsService::getMACD_Data - An error occurred retrieving MACD data from JSON buffer ...");
 			e.printStackTrace();
 		}
+		logger.info(">>> END >>> StockDetailsService::getMACD_Data");
 		return macdDAO;
 	}
 	
