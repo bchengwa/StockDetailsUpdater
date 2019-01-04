@@ -20,6 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.stock.movingaverage.MovingAverageRepositoryInterface;
+import com.stock.stochastic.SlowStochDAO;
+import com.stock.stochastic.SlowStochData;
+import com.stock.stochastic.SlowStochJSON;
+import com.stock.stochastic.SlowStochRepositoryInterface;
 import com.stock.historicalprices.HistPriceDAO;
 import com.stock.historicalprices.HistPriceData;
 import com.stock.historicalprices.HistPriceJSON;
@@ -44,9 +48,10 @@ public class StockDetailsService
 	private HistPriceRepositoryInterface histPriceRepository;
 	@Autowired
 	private MACDRepositoryInterface macdRepository;
+	@Autowired
+	private SlowStochRepositoryInterface sStochRepository;
 	
-	private final int maxDateSize = 10;
-	private final int maxMACDSize = 5;
+	private final int MAXARRAYSIZE = 10;
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	private final RestTemplate restCaller;
 	private String symbol;
@@ -54,6 +59,11 @@ public class StockDetailsService
 	private String interval;
 	private String seriesType;
 	private int period;
+	private String stochType;
+	private String slowKPeriod;
+	private String slowDPeriod;
+	private String slowKMAType;
+	private String slowDMAType;
 	private String apiKey;
 	
 	/* Constructor initializes the REST template builder to call the IEX web service */
@@ -72,7 +82,7 @@ public class StockDetailsService
 	public StockDetails getIEXStockDetails(String symbol)
 	{
 		logger.info(">>> BEGIN >>> StockDetailsService::getIEXStockDetails ...");
-		StockDetails mergedDetails = null;
+		StockDetails mergedDetails = new StockDetails();
 		
 		String keyStatURI = "https://api.iextrading.com/1.0/stock/" + symbol + "/stats";
 		String quoteURI = "https://api.iextrading.com/1.0/stock/" + symbol + "/quote";
@@ -102,7 +112,7 @@ public class StockDetailsService
 	{
 		/*Only one month worth if moving average data is necessary for performance and trading purposes*/
 		
-		MovingAverageDAO [] movingAverageDAO = new MovingAverageDAO[(maxDateSize)];
+		MovingAverageDAO [] movingAverageDAO = new MovingAverageDAO[(MAXARRAYSIZE)];
 		
 		String mvAvgURI = "https://www.alphavantage.co/query?function=" + this.function + "&symbol=" + this.symbol +
 							"&interval=" + interval + "&time_period=" + this.period + "&series_type=open&apikey=" + this.apiKey;
@@ -146,7 +156,7 @@ public class StockDetailsService
 				logger.debug("LastUpdateDate : " + movingAverageDAO[i].getLastUpdateDate().toString());
 				
 				i++;
-				if (i >= maxDateSize)
+				if (i >= MAXARRAYSIZE)
 					break;
 			}
 		}
@@ -191,7 +201,7 @@ public class StockDetailsService
 	
 	public HistPriceDAO[] getHistoricalPrices()
 	{
-		HistPriceDAO [] histPriceDAO = new HistPriceDAO[maxDateSize];
+		HistPriceDAO [] histPriceDAO = new HistPriceDAO[MAXARRAYSIZE];
 		String histPriceURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() + "&apikey=" + this.apiKey;
 		
 		logger.info(">>> BEGIN >>> StockDetailsService::getHistoricalPrices - Calling Alpha Vantage for historical prices details ...");
@@ -217,7 +227,7 @@ public class StockDetailsService
 				logger.debug("LastUpdateDate : " + histPriceDAO[i].getLastupdatedate().toString());
 				
 				i++;
-				if (i >= maxDateSize)
+				if (i >= MAXARRAYSIZE)
 					break;
 			}
 		}
@@ -259,7 +269,7 @@ public class StockDetailsService
 	
 	public MACD_DAO [] getMACD_Data()
 	{
-		MACD_DAO [] macdDAO = new MACD_DAO[maxMACDSize];
+		MACD_DAO [] macdDAO = new MACD_DAO[MAXARRAYSIZE];
 		String macdURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
 				"&interval=" + this.getInterval() + "&series_type=" + this.getSeriesType() + "&apikey=" + this.apiKey;
 		
@@ -290,7 +300,7 @@ public class StockDetailsService
 				logger.debug("LastUpdateDate : " + macdDAO[i].getLastupdatedate().toString());
 				
 				i++;
-				if (i >= maxMACDSize)
+				if (i >= MAXARRAYSIZE)
 					break;
 			}
 		}
@@ -301,6 +311,69 @@ public class StockDetailsService
 		}
 		logger.info(">>> END >>> StockDetailsService::getMACD_Data");
 		return macdDAO;
+	}
+	
+	/*
+	 * retrieves the slow stochastic dates and values. See sample below
+	 * "2018-12-31": {
+            "SlowK": "76.9820",
+            "SlowD": "60.5468"
+        },
+        "2018-12-28": {
+            "SlowK": "63.9901",
+            "SlowD": "41.5995"
+        },
+        "2018-12-27": {
+            "SlowK": "40.6683",
+            "SlowD": "24.2013"
+        }
+	 */
+	
+	public SlowStochDAO [] getSlowStochData()
+	{
+		SlowStochDAO [] stochDAO = new SlowStochDAO[MAXARRAYSIZE];
+		String stochURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
+				"&interval=" + this.getInterval() + "&slowkperiod=" + this.getSlowKPeriod() + "&slowkperiod=" +
+				this.getSlowKPeriod() +	"&slowdperiod=" + this.getSlowDPeriod() + "&slowkmatype=" + this.getSlowKMAType() +
+				"&slowdmatype=" + this.getSlowDMAType() + "&apikey=" + this.apiKey;
+		
+		logger.info(">>> BEGIN >>> StockDetailsService::getSlowStochData - Calling Alpha Vantage for stochastic details ...");
+		logger.info(">>>>>> StockDetailsService::getSlowStochData - " + stochURI);
+		
+		SlowStochJSON stochJSON = restCaller.getForObject(stochURI, SlowStochJSON.class);
+		LinkedHashMap<String, SlowStochData> stochDate = stochJSON.getStochDate();
+		
+		try
+		{
+			int i = 0;
+			for (Map.Entry<String, SlowStochData> entry : stochDate.entrySet())
+			{
+				stochDAO[i] = new SlowStochDAO();
+				stochDAO[i].setSymbol(this.getSymbol());
+				stochDAO[i].setStochType(this.getStochType());
+				stochDAO[i].setStochDate(MiscFunctions.getDateFromString(entry.getKey()));		//Stochastic date is the key
+				stochDAO[i].setStochDValue(entry.getValue().getSlowDValue());					//SlowStochData.DValue is a value
+				stochDAO[i].setStochKValue(entry.getValue().getSlowKValue());					//SlowStochData.KValue is a value
+				stochDAO[i].setLastupdatedate(MiscFunctions.getCurrentDateTime());
+				
+				logger.debug("Symbol : " + stochDAO[i].getSymbol());
+				logger.debug("Stochastic Date : " + stochDAO[i].getStochDate().toString());
+				logger.debug("Stochastic D Value : " + stochDAO[i].getStochDValue());
+				logger.debug("Stochastic K Value : " + stochDAO[i].getStochKValue());
+				logger.debug("LastUpdateDate : " + stochDAO[i].getLastupdatedate().toString());
+				
+				i++;
+				if (i >= MAXARRAYSIZE)
+					break;
+			}
+		}
+		catch(Exception e)
+		{
+			logger.info(">>> END >>> StockDetailsService::getSlowStochData - An error occurred retrieving stochastic data from JSON buffer ...");
+			e.printStackTrace();
+		}
+		logger.info(">>> END >>> StockDetailsService::getSlowStochData");
+		return stochDAO;
 	}
 	
 	public void updateStockDetails(StockDetails stockDetails)
@@ -321,6 +394,11 @@ public class StockDetailsService
 	public void addMACD_Data(MACD_DAO macdDAO)
 	{
 		macdRepository.save(macdDAO);
+	}
+	
+	public void addStochasticData(SlowStochDAO stochDAO)
+	{
+		sStochRepository.save(stochDAO);
 	}
 	
 	public List<Stock> getOptionableStocks(String indValue)
@@ -398,6 +476,86 @@ public class StockDetailsService
 	public int getPeriod()
 	{
 		return period;
+	}
+
+	/**
+	 * @return the stochType
+	 */
+	public String getStochType()
+	{
+		return stochType;
+	}
+
+	/**
+	 * @param stochType the stochType to set
+	 */
+	public void setStochType(String stochType)
+	{
+		this.stochType = stochType;
+	}
+
+	/**
+	 * @return the slowKPeriod
+	 */
+	public String getSlowKPeriod()
+	{
+		return slowKPeriod;
+	}
+
+	/**
+	 * @param slowKPeriod the slowKPeriod to set
+	 */
+	public void setSlowKPeriod(String slowKPeriod)
+	{
+		this.slowKPeriod = slowKPeriod;
+	}
+
+	/**
+	 * @return the slowDPeriod
+	 */
+	public String getSlowDPeriod()
+	{
+		return slowDPeriod;
+	}
+
+	/**
+	 * @param slowDPeriod the slowDPeriod to set
+	 */
+	public void setSlowDPeriod(String slowDPeriod)
+	{
+		this.slowDPeriod = slowDPeriod;
+	}
+
+	/**
+	 * @return the slowKMAType
+	 */
+	public String getSlowKMAType()
+	{
+		return slowKMAType;
+	}
+
+	/**
+	 * @param slowKMAType the slowKMAType to set
+	 */
+	public void setSlowKMAType(String slowKMAType)
+	{
+		this.slowKMAType = slowKMAType;
+	}
+
+	/**
+	 * @return the slowDMAType
+	 */
+	public String getSlowDMAType()
+	{
+		return slowDMAType;
+	}
+
+	/**
+	 * @param slowDMAType the slowDMAType to set
+	 */
+	public void setSlowDMAType(String slowDMAType)
+	{
+		this.slowDMAType = slowDMAType;
 	}
 
 	/**

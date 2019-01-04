@@ -20,6 +20,7 @@ import com.stock.historicalprices.HistPriceDAO;
 import com.stock.macd.MACD_DAO;
 import com.stock.miscfunctions.MiscFunctions;
 import com.stock.movingaverage.MovingAverageDAO;
+import com.stock.stochastic.SlowStochDAO;
 
 @RestController
 @RequestMapping(value = "/rest/symbols")
@@ -46,6 +47,7 @@ public class StockDetailsController
 			/* Get all optionable stocks from the database. Then loop through and fetch each stock */
 			for (Stock stock : stockDetailsService.getOptionableStocks("Y"))
 			{
+				//stock = new Stock();
 				logger.debug("Symbol = " + stock.getSymbol());
 				logger.debug("name = " + stock.getName());
 				
@@ -95,16 +97,16 @@ public class StockDetailsController
 					/*load moving average data into the database*/
 					stockDetailsService.addMovingAverageData(movingAverage[i]);
 				}
-				
+
 				/*Get historical price data from Alpha Vantage*/
 				stockDetailsService.setFunction("TIME_SERIES_DAILY");
 				HistPriceDAO [] histPrice = stockDetailsService.getHistoricalPrices();
-				for (int i = 0; i< histPrice.length; i++)
+				for (int i = 0; i < histPrice.length; i++)
 				{
 					/*load historical price data in the database*/
 					stockDetailsService.addHistoricalPriceData(histPrice[i]);
 				}
-				
+
 				/*Get MACD data from Alpha Vantage*/
 				stockDetailsService.setFunction("MACD");
 				stockDetailsService.setInterval("daily");
@@ -115,6 +117,22 @@ public class StockDetailsController
 				{
 					/*load the MACD data into the database*/
 					stockDetailsService.addMACD_Data(macdData[i]);
+				}
+
+				/*Get stochastic data from Alpha Vantage*/
+				stockDetailsService.setFunction("STOCH");
+				stockDetailsService.setStochType("SLOW");
+				stockDetailsService.setInterval("daily");
+				stockDetailsService.setSlowKPeriod("14");
+				stockDetailsService.setSlowDPeriod("3");
+				stockDetailsService.setSlowKMAType("0");
+				stockDetailsService.setSlowDMAType("0");
+
+				SlowStochDAO [] stochData = stockDetailsService.getSlowStochData();
+				for (int i = 0; i < stochData.length; i++)
+				{
+					/*load the stochastic data into the database*/
+					stockDetailsService.addStochasticData(stochData[i]);
 				}
 			}
 		}

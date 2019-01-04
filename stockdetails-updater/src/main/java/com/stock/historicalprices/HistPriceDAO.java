@@ -32,6 +32,10 @@ public class HistPriceDAO
 	@Column (name = "lastupdatedate")
 	private Date lastupdatedate;
 
+	public HistPriceDAO()
+	{
+	}
+	
 	/**
 	 * @return the symbol
 	 */
