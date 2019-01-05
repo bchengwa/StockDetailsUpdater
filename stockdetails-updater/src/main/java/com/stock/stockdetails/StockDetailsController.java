@@ -27,10 +27,11 @@ import com.stock.stochastic.SlowStochDAO;
 public class StockDetailsController
 {
 	@Autowired
-	StockDetailsService stockDetailsService;
+	private StockDetailsService stockDetailsService;
 	
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
-	private final String alphaAPIKey = "58A2OIAHS4N54O2F2";
+	private final String yahooAPIKey = "58A2OIAHS4N54O2F2";
+	//private final String gmailAPIKey = "N3TTON3Z9VKEN9FL";
 
 	/*This mapping denotes the Tomcat endpoint. Enter this value in Postman to test the remote web service*/
 	
@@ -47,12 +48,13 @@ public class StockDetailsController
 			/* Get all optionable stocks from the database. Then loop through and fetch each stock */
 			for (Stock stock : stockDetailsService.getOptionableStocks("Y"))
 			{
-				//stock = new Stock();
+				logger.info(">>> BEGIN >>> StockDetailsController::getOptionableStocks for " + stock.getSymbol());
 				logger.debug("Symbol = " + stock.getSymbol());
 				logger.debug("name = " + stock.getName());
 				
 				/* Retrieve stock details information from IEX */
-				StockDetails stockDetails = stockDetailsService.getIEXStockDetails(stock.getSymbol());
+				stockDetailsService.setSymbol(stock.getSymbol());
+				StockDetails stockDetails = stockDetailsService.getIEXStockDetails();
 				stockDetails.setLastupdatedate(MiscFunctions.getCurrentDateTime());
 				
 				logger.debug("symbol = " + stockDetails.getSymbol());
@@ -84,13 +86,11 @@ public class StockDetailsController
 				
 				stockDetailsService.updateStockDetails(stockDetails);
 				
-				stockDetailsService.setSymbol(stock.getSymbol());
-				stockDetailsService.setApiKey(alphaAPIKey);
+				/*Get moving average data from Alpha Vantage. Only SMA for now */
+				stockDetailsService.setApiKey(yahooAPIKey);
 				stockDetailsService.setFunction("SMA");
 				stockDetailsService.setInterval("daily");
 				stockDetailsService.setPeriod(20);
-
-				/*Get moving average data from Alpha Vantage. Only SMA for now */
 				MovingAverageDAO [] movingAverage = stockDetailsService.getMovingAverageData();
 				for (int i = 0; i < movingAverage.length; i++)
 				{
@@ -134,6 +134,7 @@ public class StockDetailsController
 					/*load the stochastic data into the database*/
 					stockDetailsService.addStochasticData(stochData[i]);
 				}
+				logger.info(">>> END >>> StockDetailsController::getOptionableStocks for " + stock.getSymbol());
 			}
 		}
 		catch(Exception e)

@@ -29,6 +29,9 @@ public class HistPriceDAO
 	@Column(name = "closingprice")
 	private double closingPrice;
 	
+	@Column(name = "volume")
+	private long volume;
+	
 	@Column (name = "lastupdatedate")
 	private Date lastupdatedate;
 
@@ -82,6 +85,22 @@ public class HistPriceDAO
 	public void setClosingPrice(double closingPrice)
 	{
 		this.closingPrice = closingPrice;
+	}
+
+	/**
+	 * @return the volume
+	 */
+	public long getVolume()
+	{
+		return volume;
+	}
+
+	/**
+	 * @param volume the volume to set
+	 */
+	public void setVolume(long volume)
+	{
+		this.volume = volume;
 	}
 
 	/**

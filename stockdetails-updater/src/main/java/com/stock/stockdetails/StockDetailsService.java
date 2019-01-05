@@ -51,7 +51,7 @@ public class StockDetailsService
 	@Autowired
 	private SlowStochRepositoryInterface sStochRepository;
 	
-	private final int MAXARRAYSIZE = 10;
+	private final int MAXARRAYSIZE = 5;
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	private final RestTemplate restCaller;
 	private String symbol;
@@ -79,25 +79,25 @@ public class StockDetailsService
 	 * merging the two GET requests.
 	 */
 	
-	public StockDetails getIEXStockDetails(String symbol)
+	public StockDetails getIEXStockDetails()
 	{
-		logger.info(">>> BEGIN >>> StockDetailsService::getIEXStockDetails ...");
+		logger.info(">>> BEGIN >>> StockDetailsService::getIEXStockDetails for " + this.getSymbol());
 		StockDetails mergedDetails = new StockDetails();
 		
-		String keyStatURI = "https://api.iextrading.com/1.0/stock/" + symbol + "/stats";
-		String quoteURI = "https://api.iextrading.com/1.0/stock/" + symbol + "/quote";
-
-		logger.info(">>>>>> StockDetailsService::getIEXStockDetails - Calling IEX for key stats details for " + symbol);
+		String keyStatURI = "https://api.iextrading.com/1.0/stock/" + this.getSymbol() + "/stats";
+		String quoteURI = "https://api.iextrading.com/1.0/stock/" + this.getSymbol() + "/quote";
+		
+		logger.info(">>>>>> StockDetailsService::getMovingAverageData - " + keyStatURI);
 		StockDetails keyStats = restCaller.getForObject(keyStatURI, StockDetails.class);
-		
-		logger.info(">>>>>> StockDetailsService::getIEXStockDetails - Calling IEX for key quote details for " + symbol);
+
+		logger.info(">>>>>> StockDetailsService::getMovingAverageData - " + quoteURI);
 		StockDetails quoteDetails = restCaller.getForObject(quoteURI, StockDetails.class);
-		
+
 		keyStats.setVolume(quoteDetails.getVolume());
 		keyStats.setPrice(quoteDetails.getPrice());
 		mergedDetails = keyStats;
 		 
-		logger.info("<<< END <<< StockDetailsService::getIEXStockDetails");
+		logger.info("<<< END <<< StockDetailsService::getIEXStockDetails for " + this.getSymbol());
 		return mergedDetails;
 	}
 	
@@ -110,14 +110,13 @@ public class StockDetailsService
 
 	public MovingAverageDAO[] getMovingAverageData()
 	{
-		/*Only one month worth if moving average data is necessary for performance and trading purposes*/
-		
+		logger.info(">>> BEGIN >>> StockDetailsService::getMovingAverageData for " + this.getSymbol());
+
 		MovingAverageDAO [] movingAverageDAO = new MovingAverageDAO[(MAXARRAYSIZE)];
 		
 		String mvAvgURI = "https://www.alphavantage.co/query?function=" + this.function + "&symbol=" + this.symbol +
 							"&interval=" + interval + "&time_period=" + this.period + "&series_type=open&apikey=" + this.apiKey;
 		
-		logger.info(">>> BEGIN >>> StockDetailsService::getMovingAverageData - Calling Alpha Vantage for moving average details");
 		logger.info(">>>>>> StockDetailsService::getMovingAverageData - " + mvAvgURI);
 		
 		MovingAverageJSON movingAvgData = restCaller.getForObject(mvAvgURI, MovingAverageJSON.class);
@@ -126,6 +125,7 @@ public class StockDetailsService
 		 * Get the LinkedMap piece of the return data and store in a local variable.
 		 * Then populate it into the MovingAverage JPA DAO.
 		 */
+		
 		LinkedHashMap<String, MAData> maMap = movingAvgData.getMovingAverageDate();
 		
 		/*
@@ -136,7 +136,7 @@ public class StockDetailsService
 		try
 		{
 			int i = 0;
-			for(Map.Entry<String, MAData> entry : maMap.entrySet())
+			for (Map.Entry<String, MAData> entry : maMap.entrySet())
 			{
 				movingAverageDAO[i] = new MovingAverageDAO();
 				movingAverageDAO[i].setSymbol(movingAvgData.getMetadata().getSymbol());
@@ -166,7 +166,7 @@ public class StockDetailsService
 			e.printStackTrace();
 		}
 
-		logger.info("<<< END <<< StockDetailsService::getMovingAverageData");
+		logger.info("<<< END <<< StockDetailsService::getMovingAverageData for " + this.getSymbol());
 		return movingAverageDAO;
 	}
 	
@@ -201,10 +201,11 @@ public class StockDetailsService
 	
 	public HistPriceDAO[] getHistoricalPrices()
 	{
+		logger.info(">>> BEGIN >>> StockDetailsService::getHistoricalPrices for " + this.getSymbol());
+
 		HistPriceDAO [] histPriceDAO = new HistPriceDAO[MAXARRAYSIZE];
 		String histPriceURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() + "&apikey=" + this.apiKey;
 		
-		logger.info(">>> BEGIN >>> StockDetailsService::getHistoricalPrices - Calling Alpha Vantage for historical prices details ...");
 		logger.info(">>>>>> StockDetailsService::getHistoricalPrices - " + histPriceURI);
 		
 		HistPriceJSON histPriceJSON = restCaller.getForObject(histPriceURI, HistPriceJSON.class);
@@ -219,11 +220,13 @@ public class StockDetailsService
 				histPriceDAO[i].setSymbol(this.getSymbol());
 				histPriceDAO[i].setClosingDate(MiscFunctions.getDateFromString(entry.getKey()));	//Closing date is the key
 				histPriceDAO[i].setClosingPrice(entry.getValue().getClosingPrice());				//Closing price is the value
+				histPriceDAO[i].setVolume(entry.getValue().getVolume());							//Volume is a value
 				histPriceDAO[i].setLastupdatedate(MiscFunctions.getCurrentDateTime());
 				
 				logger.debug("Symbol : " + histPriceDAO[i].getSymbol());
 				logger.debug("Closing Date : " + histPriceDAO[i].getClosingDate().toString());
 				logger.debug("Closing Price : " + histPriceDAO[i].getClosingPrice());
+				logger.debug("Volume : " + histPriceDAO[i].getVolume());
 				logger.debug("LastUpdateDate : " + histPriceDAO[i].getLastupdatedate().toString());
 				
 				i++;
@@ -236,7 +239,7 @@ public class StockDetailsService
 			logger.info(">>> END >>> StockDetailsService::getHistoricalPrices - An error occurred retrieving historical price data from JSON buffer ...");
 			e.printStackTrace();
 		}
-		logger.info(">>> END >>> StockDetailsService::getHistoricalPrices");
+		logger.info(">>> END >>> StockDetailsService::getHistoricalPrices for " + this.getSymbol());
 		return histPriceDAO;
 	}
 
@@ -269,11 +272,12 @@ public class StockDetailsService
 	
 	public MACD_DAO [] getMACD_Data()
 	{
+		logger.info(">>> BEGIN >>> StockDetailsService::getMACD_Data for " + this.getSymbol());
+
 		MACD_DAO [] macdDAO = new MACD_DAO[MAXARRAYSIZE];
 		String macdURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
 				"&interval=" + this.getInterval() + "&series_type=" + this.getSeriesType() + "&apikey=" + this.apiKey;
 		
-		logger.info(">>> BEGIN >>> StockDetailsService::getMACD_Data - Calling Alpha Vantage for MACD details ...");
 		logger.info(">>>>>> StockDetailsService::getMACD_Data - " + macdURI);
 		
 		MACD_JSON macdJSON = restCaller.getForObject(macdURI, MACD_JSON.class);
@@ -309,7 +313,7 @@ public class StockDetailsService
 			logger.info(">>> END >>> StockDetailsService::getMACD_Data - An error occurred retrieving MACD data from JSON buffer ...");
 			e.printStackTrace();
 		}
-		logger.info(">>> END >>> StockDetailsService::getMACD_Data");
+		logger.info(">>> END >>> StockDetailsService::getMACD_Data for " + this.getSymbol());
 		return macdDAO;
 	}
 	
@@ -331,13 +335,14 @@ public class StockDetailsService
 	
 	public SlowStochDAO [] getSlowStochData()
 	{
+		logger.info(">>> BEGIN >>> StockDetailsService::getSlowStochData for " + this.getSymbol());
+
 		SlowStochDAO [] stochDAO = new SlowStochDAO[MAXARRAYSIZE];
 		String stochURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
 				"&interval=" + this.getInterval() + "&slowkperiod=" + this.getSlowKPeriod() + "&slowkperiod=" +
 				this.getSlowKPeriod() +	"&slowdperiod=" + this.getSlowDPeriod() + "&slowkmatype=" + this.getSlowKMAType() +
 				"&slowdmatype=" + this.getSlowDMAType() + "&apikey=" + this.apiKey;
 		
-		logger.info(">>> BEGIN >>> StockDetailsService::getSlowStochData - Calling Alpha Vantage for stochastic details ...");
 		logger.info(">>>>>> StockDetailsService::getSlowStochData - " + stochURI);
 		
 		SlowStochJSON stochJSON = restCaller.getForObject(stochURI, SlowStochJSON.class);
@@ -372,33 +377,43 @@ public class StockDetailsService
 			logger.info(">>> END >>> StockDetailsService::getSlowStochData - An error occurred retrieving stochastic data from JSON buffer ...");
 			e.printStackTrace();
 		}
-		logger.info(">>> END >>> StockDetailsService::getSlowStochData");
+		logger.info(">>> END >>> StockDetailsService::getSlowStochData for " + this.getSymbol());
 		return stochDAO;
 	}
 	
 	public void updateStockDetails(StockDetails stockDetails)
 	{
+		logger.info("<<< BEGIN <<< StockDetailsService::updateStockDetails for " + this.getSymbol());
 		stockDetailsRepository.save(stockDetails);
+		logger.info("<<< END <<< StockDetailsService::updateStockDetails for " + this.getSymbol());
 	}
 
 	public void addMovingAverageData(MovingAverageDAO movingAverage)
 	{
+		logger.info("<<< BEGIN <<< StockDetailsService::addMovingAverageData for " + this.getSymbol());
 		movingAverageRepository.save(movingAverage);
+		logger.info("<<< END <<< StockDetailsService::addMovingAverageData for " + this.getSymbol());
 	}
 
 	public void addHistoricalPriceData(HistPriceDAO histPriceDAO)
 	{
+		logger.info("<<< BEGIN <<< StockDetailsService::addHistoricalPriceData for " + this.getSymbol());
 		histPriceRepository.save(histPriceDAO);
+		logger.info("<<< END <<< StockDetailsService::addHistoricalPriceData for " + this.getSymbol());
 	}
 
 	public void addMACD_Data(MACD_DAO macdDAO)
 	{
+		logger.info("<<< BEGIN <<< StockDetailsService::addMACD_Data for " + this.getSymbol());
 		macdRepository.save(macdDAO);
+		logger.info("<<< END <<< StockDetailsService::addMACD_Data for " + this.getSymbol());
 	}
 	
 	public void addStochasticData(SlowStochDAO stochDAO)
 	{
+		logger.info("<<< BEGIN <<< StockDetailsService::addStochasticData for " + this.getSymbol());
 		sStochRepository.save(stochDAO);
+		logger.info("<<< END <<< StockDetailsService::updateStockDetails for " + this.getSymbol());
 	}
 	
 	public List<Stock> getOptionableStocks(String indValue)
