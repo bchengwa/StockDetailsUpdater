@@ -29,6 +29,15 @@ public class HistPriceDAO
 	@Column(name = "closingprice")
 	private double closingPrice;
 	
+	@Column(name = "openingprice")
+	private double openingPrice;
+	
+	@Column(name = "highprice")
+	private double highPrice;
+	
+	@Column(name = "lowprice")
+	private double lowPrice;
+	
 	@Column(name = "volume")
 	private long volume;
 	
@@ -85,6 +94,54 @@ public class HistPriceDAO
 	public void setClosingPrice(double closingPrice)
 	{
 		this.closingPrice = closingPrice;
+	}
+
+	/**
+	 * @return the openingPrice
+	 */
+	public double getOpeningPrice()
+	{
+		return openingPrice;
+	}
+
+	/**
+	 * @param openingPrice the openingPrice to set
+	 */
+	public void setOpeningPrice(double openingPrice)
+	{
+		this.openingPrice = openingPrice;
+	}
+
+	/**
+	 * @return the highPrice
+	 */
+	public double getHighPrice()
+	{
+		return highPrice;
+	}
+
+	/**
+	 * @param highPrice the highPrice to set
+	 */
+	public void setHighPrice(double highPrice)
+	{
+		this.highPrice = highPrice;
+	}
+
+	/**
+	 * @return the lowPrice
+	 */
+	public double getLowPrice()
+	{
+		return lowPrice;
+	}
+
+	/**
+	 * @param lowPrice the lowPrice to set
+	 */
+	public void setLowPrice(double lowPrice)
+	{
+		this.lowPrice = lowPrice;
 	}
 
 	/**

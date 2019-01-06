@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class HistPriceData
 {
 	@JsonProperty("1. open")
-	private double openPrice;
+	private double openingPrice;
 	
 	@JsonProperty("2. high")
 	private double highPrice;
@@ -41,17 +41,17 @@ public class HistPriceData
 	/**
 	 * @return the openPrice
 	 */
-	public double getOpenPrice()
+	public double getOpeningPrice()
 	{
-		return openPrice;
+		return openingPrice;
 	}
 
 	/**
 	 * @param openPrice the openPrice to set
 	 */
-	public void setOpenPrice(double openPrice)
+	public void setOpeningPrice(double openingPrice)
 	{
-		this.openPrice = openPrice;
+		this.openingPrice = openingPrice;
 	}
 
 	/**

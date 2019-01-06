@@ -19,7 +19,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.stock.movingaverage.MovingAverageRepositoryInterface;
 import com.stock.stochastic.SlowStochDAO;
 import com.stock.stochastic.SlowStochData;
 import com.stock.stochastic.SlowStochJSON;
@@ -34,6 +33,7 @@ import com.stock.macd.MACD_Data;
 import com.stock.macd.MACD_JSON;
 import com.stock.miscfunctions.*;
 import com.stock.movingaverage.*;
+//import com.stock.errormapping.*;
 
 @Service
 public class StockDetailsService
@@ -220,12 +220,18 @@ public class StockDetailsService
 				histPriceDAO[i].setSymbol(this.getSymbol());
 				histPriceDAO[i].setClosingDate(MiscFunctions.getDateFromString(entry.getKey()));	//Closing date is the key
 				histPriceDAO[i].setClosingPrice(entry.getValue().getClosingPrice());				//Closing price is the value
+				histPriceDAO[i].setOpeningPrice(entry.getValue().getOpeningPrice());				//Opening price is the value
+				histPriceDAO[i].setHighPrice(entry.getValue().getHighPrice());				//High price is the value
+				histPriceDAO[i].setLowPrice(entry.getValue().getLowPrice());				//Low price is the value
 				histPriceDAO[i].setVolume(entry.getValue().getVolume());							//Volume is a value
 				histPriceDAO[i].setLastupdatedate(MiscFunctions.getCurrentDateTime());
 				
 				logger.debug("Symbol : " + histPriceDAO[i].getSymbol());
 				logger.debug("Closing Date : " + histPriceDAO[i].getClosingDate().toString());
 				logger.debug("Closing Price : " + histPriceDAO[i].getClosingPrice());
+				logger.debug("Opening Price : " + histPriceDAO[i].getOpeningPrice());
+				logger.debug("High Price : " + histPriceDAO[i].getHighPrice());
+				logger.debug("Low Price : " + histPriceDAO[i].getLowPrice());
 				logger.debug("Volume : " + histPriceDAO[i].getVolume());
 				logger.debug("LastUpdateDate : " + histPriceDAO[i].getLastupdatedate().toString());
 				
