@@ -33,6 +33,7 @@ import com.stock.macd.MACD_Data;
 import com.stock.macd.MACD_JSON;
 import com.stock.miscfunctions.*;
 import com.stock.movingaverage.*;
+import com.stock.params.StockParamsRepositoryInterface;
 //import com.stock.errormapping.*;
 
 @Service
@@ -50,6 +51,8 @@ public class StockDetailsService
 	private MACDRepositoryInterface macdRepository;
 	@Autowired
 	private SlowStochRepositoryInterface sStochRepository;
+	@Autowired
+	private StockParamsRepositoryInterface stockParamsRepository;
 	
 	private final int MAXARRAYSIZE = 5;
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -65,6 +68,9 @@ public class StockDetailsService
 	private String slowKMAType;
 	private String slowDMAType;
 	private String apiKey;
+	private String alphaVantageURL;
+	private String iexURL;
+	
 	
 	/* Constructor initializes the REST template builder to call the IEX web service */
 	
@@ -84,8 +90,8 @@ public class StockDetailsService
 		logger.info(">>> BEGIN >>> StockDetailsService::getIEXStockDetails for " + this.getSymbol());
 		StockDetails mergedDetails = new StockDetails();
 		
-		String keyStatURI = "https://api.iextrading.com/1.0/stock/" + this.getSymbol() + "/stats";
-		String quoteURI = "https://api.iextrading.com/1.0/stock/" + this.getSymbol() + "/quote";
+		String keyStatURI = this.getIexURL() + this.getSymbol() + "/stats";
+		String quoteURI = this.getIexURL() + this.getSymbol() + "/quote";
 		
 		logger.info(">>>>>> StockDetailsService::getMovingAverageData - " + keyStatURI);
 		StockDetails keyStats = restCaller.getForObject(keyStatURI, StockDetails.class);
@@ -114,7 +120,7 @@ public class StockDetailsService
 
 		MovingAverageDAO [] movingAverageDAO = new MovingAverageDAO[(MAXARRAYSIZE)];
 		
-		String mvAvgURI = "https://www.alphavantage.co/query?function=" + this.function + "&symbol=" + this.symbol +
+		String mvAvgURI = this.getAlphaVantageURL() + "function=" + this.function + "&symbol=" + this.symbol +
 							"&interval=" + interval + "&time_period=" + this.period + "&series_type=open&apikey=" + this.apiKey;
 		
 		logger.info(">>>>>> StockDetailsService::getMovingAverageData - " + mvAvgURI);
@@ -204,7 +210,7 @@ public class StockDetailsService
 		logger.info(">>> BEGIN >>> StockDetailsService::getHistoricalPrices for " + this.getSymbol());
 
 		HistPriceDAO [] histPriceDAO = new HistPriceDAO[MAXARRAYSIZE];
-		String histPriceURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() + "&apikey=" + this.apiKey;
+		String histPriceURI = this.getAlphaVantageURL() + "function=" + this.getFunction() + "&symbol=" + this.getSymbol() + "&apikey=" + this.apiKey;
 		
 		logger.info(">>>>>> StockDetailsService::getHistoricalPrices - " + histPriceURI);
 		
@@ -281,7 +287,7 @@ public class StockDetailsService
 		logger.info(">>> BEGIN >>> StockDetailsService::getMACD_Data for " + this.getSymbol());
 
 		MACD_DAO [] macdDAO = new MACD_DAO[MAXARRAYSIZE];
-		String macdURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
+		String macdURI = this.getAlphaVantageURL() + "function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
 				"&interval=" + this.getInterval() + "&series_type=" + this.getSeriesType() + "&apikey=" + this.apiKey;
 		
 		logger.info(">>>>>> StockDetailsService::getMACD_Data - " + macdURI);
@@ -344,7 +350,7 @@ public class StockDetailsService
 		logger.info(">>> BEGIN >>> StockDetailsService::getSlowStochData for " + this.getSymbol());
 
 		SlowStochDAO [] stochDAO = new SlowStochDAO[MAXARRAYSIZE];
-		String stochURI = "https://www.alphavantage.co/query?function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
+		String stochURI = this.getAlphaVantageURL() + "function=" + this.getFunction() + "&symbol=" + this.getSymbol() +
 				"&interval=" + this.getInterval() + "&slowkperiod=" + this.getSlowKPeriod() + "&slowkperiod=" +
 				this.getSlowKPeriod() +	"&slowdperiod=" + this.getSlowDPeriod() + "&slowkmatype=" + this.getSlowKMAType() +
 				"&slowdmatype=" + this.getSlowDMAType() + "&apikey=" + this.apiKey;
@@ -427,6 +433,18 @@ public class StockDetailsService
 		return stockRepository.findByOptionsoffered(indValue);
 	}
 
+
+	/*
+	 * This method copies all the parameter values from the database and loads them into a map.
+	 * getParamMapValues will be used to retrieve individual parameters. This function is called
+	 * in the constructor.
+	 */
+	
+	public String getStockParameter(String paramName)
+	{
+		return stockParamsRepository.findByParameterName(paramName).getParameterValue();
+	}
+	
 	/**
 	 * @return the symbol
 	 */
@@ -601,5 +619,37 @@ public class StockDetailsService
 	public void setApiKey(String apiKey)
 	{
 		this.apiKey = apiKey;
+	}
+
+	/**
+	 * @return the alphaVantageURL
+	 */
+	public String getAlphaVantageURL()
+	{
+		return alphaVantageURL;
+	}
+
+	/**
+	 * @param alphaVantageURL the alphaVantageURL to set
+	 */
+	public void setAlphaVantageURL(String alphaVantageURL)
+	{
+		this.alphaVantageURL = alphaVantageURL;
+	}
+
+	/**
+	 * @return the iexURL
+	 */
+	public String getIexURL()
+	{
+		return iexURL;
+	}
+
+	/**
+	 * @param iexURL the iexURL to set
+	 */
+	public void setIexURL(String iexURL)
+	{
+		this.iexURL = iexURL;
 	}
 }

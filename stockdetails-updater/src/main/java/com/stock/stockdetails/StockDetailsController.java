@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import com.stock.historicalprices.HistPriceDAO;
 import com.stock.macd.MACD_DAO;
 import com.stock.miscfunctions.MiscFunctions;
@@ -30,10 +29,6 @@ public class StockDetailsController
 	private StockDetailsService stockDetailsService;
 	
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
-	private final String yahooAPIKey = "58A2OIAHS4N54O2F2";
-	//private final String gmailAPIKey = "N3TTON3Z9VKEN9FL";
-
-	/*This mapping denotes the Tomcat endpoint. Enter this value in Postman to test the remote web service*/
 	
 	@GetMapping(value =  "/stockdetails")
 	public void retrieveOptionalbleSymbols()
@@ -45,6 +40,11 @@ public class StockDetailsController
 		
 		try
 		{
+			/*Retrieve global parameter data from the database before initiating requests*/
+			stockDetailsService.setIexURL(stockDetailsService.getStockParameter("IEXURL"));
+			stockDetailsService.setAlphaVantageURL(stockDetailsService.getStockParameter("ALPHAURL"));			
+			stockDetailsService.setApiKey(stockDetailsService.getStockParameter("ALPHAKEY"));
+			
 			/* Get all optionable stocks from the database. Then loop through and fetch each stock */
 			for (Stock stock : stockDetailsService.getOptionableStocks("Y"))
 			{
@@ -87,7 +87,6 @@ public class StockDetailsController
 				stockDetailsService.updateStockDetails(stockDetails);
 				
 				/*Get moving average data from Alpha Vantage. Only SMA for now */
-				stockDetailsService.setApiKey(yahooAPIKey);
 				stockDetailsService.setFunction("SMA");
 				stockDetailsService.setInterval("daily");
 				stockDetailsService.setPeriod(20);
