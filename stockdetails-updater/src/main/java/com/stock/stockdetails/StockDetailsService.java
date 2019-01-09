@@ -34,7 +34,6 @@ import com.stock.macd.MACD_JSON;
 import com.stock.miscfunctions.*;
 import com.stock.movingaverage.*;
 import com.stock.params.StockParamsRepositoryInterface;
-//import com.stock.errormapping.*;
 
 @Service
 public class StockDetailsService
